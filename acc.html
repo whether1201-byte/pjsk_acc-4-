@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Proseka Manager Pro</title>
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@700;900&family=Noto+Sans+KR:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --p-grad: linear-gradient(to bottom, #b5f4ff 0%, #d8b7ff 100%);
+            --ap-grad: linear-gradient(45deg, #f784ff, #83f1ff, #fff585);
+            --g-color: #f3a6ff; --gd-color: #7cd6ff; --b-color: #84ffb5; --m-color: #e0e0e0;
+            --fc-grad: linear-gradient(to bottom, #ffc2fb 0%, #e491ff 100%);
+            --master: #bc43f0; --expert: #ea3666; --append: #e491ff; --hard: #f9a31b;
+            --bg-dark: #1a1b26; --card-bg: #24273a;
+            --tier-iron: #a19d94; --tier-bronze: #cd7f32; --tier-silver: #c0c0c0;
+            --tier-gold: #ffd700; --tier-platinum: #3ef2ad; --tier-diamond: #7ed6ff;
+            --tier-master: #bc43f0; --tier-grandmaster: #ff4e50;
+        }
+
+        body { font-family: 'Exo 2', 'Noto Sans KR', sans-serif; background: var(--bg-dark); margin: 0; padding: 10px; color: #eee; }
+        .container { max-width: 600px; margin: 0 auto; }
+
+        .tier-dashboard {
+            background: linear-gradient(135deg, #2d3047 0%, #1a1b26 100%);
+            padding: 20px; border-radius: 20px; margin-bottom: 15px;
+            border: 1px solid #444; text-align: center;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3); cursor: pointer;
+        }
+        .tier-name { font-size: 1.8rem; font-weight: 900; margin-bottom: 4px; display: block; }
+        .tier-score { font-size: 0.9rem; color: #aaa; font-weight: 700; }
+        .top10-info { font-size: 0.7rem; color: #666; margin-top: 8px; }
+
+        .side-panel { background: var(--card-bg); padding: 18px; border-radius: 16px; margin-bottom: 15px; border: 1px solid #3b3f5a; }
+        .input-group { margin-bottom: 12px; }
+        label { display: block; font-size: 0.7rem; color: #aaa; margin-bottom: 4px; font-weight: 700; }
+        input, select { 
+            width: 100%; padding: 14px; background: #161822; border: 1px solid #444; 
+            color: #fff; border-radius: 10px; box-sizing: border-box; font-size: 1rem; font-family: inherit;
+        }
+        .judgment-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .lbl-p { background: var(--p-grad); -webkit-background-clip: text; color: transparent; }
+        
+        button#save-btn { width: 100%; padding: 16px; margin-top: 15px; background: #5a5df0; color: white; border: none; border-radius: 12px; font-weight: 900; font-size: 1.1rem; }
+
+        .filter-section { margin-bottom: 15px; background: var(--card-bg); padding: 12px; border-radius: 16px; border: 1px solid #3b3f5a; }
+        .filter-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; -webkit-overflow-scrolling: touch; }
+        .filter-row::-webkit-scrollbar { display: none; }
+        .filter-btn { flex: 0 0 auto; background: #161822; border: 1px solid #444; color: #888; padding: 8px 16px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+        .filter-btn.active { background: #5a5df0; color: white; border-color: #5a5df0; }
+
+        .record-item { background: #1e2030; padding: 16px; border-radius: 16px; margin-bottom: 12px; border: 1px solid #2d3047; min-height: 110px; display: flex; flex-direction: column; justify-content: space-between; position: relative; }
+        .record-points { position: absolute; top: 16px; right: 50px; font-size: 0.75rem; color: #666; font-weight: 900; }
+        
+        .item-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .song-title { font-weight: 700; font-size: 1.05rem; color: #fff; display: block; margin-top: 2px; }
+        .lv-tag { font-weight: 900; padding: 2px 8px; border-radius: 4px; font-size: 0.65rem; color: #fff; display: inline-block; }
+        .item-status-row { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.25); padding: 10px 12px; border-radius: 10px; margin-top: 8px; }
+        .judgments { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; flex: 2; }
+        .judgments span { font-size: 1rem; font-weight: 900; display: block; text-align: center; }
+        .p { background: var(--p-grad); -webkit-background-clip: text; color: transparent; }
+        .g { color: var(--g-color); } .gd { color: var(--gd-color); } .b { color: var(--b-color); } .m { color: var(--m-color); }
+        .status-display { flex: 1.2; text-align: right; min-height: 38px; display: flex; flex-direction: column; justify-content: center; }
+        .minus-val { font-weight: 900; font-size: 1.4rem; color: #fff; line-height: 1; }
+        .fc-text { background: var(--fc-grad); -webkit-background-clip: text; color: transparent; font-size: 0.75rem; font-weight: 900; margin-top: 2px; }
+        .status-ap { background: var(--ap-grad); -webkit-background-clip: text; color: transparent; font-size: 1.15rem; font-weight: 900; }
+        .del-btn { background: rgba(255,255,255,0.05); border: none; color: #555; width: 26px; height: 26px; border-radius: 50%; font-size: 0.8rem; display: flex; align-items: center; justify-content: center; }
+
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 100; justify-content: center; align-items: center; }
+        .modal-content { background: var(--card-bg); padding: 25px; border-radius: 20px; width: 85%; max-width: 400px; max-height: 70vh; overflow-y: auto; border: 1px solid #5a5df0; }
+        .modal-title { font-size: 1.2rem; font-weight: 900; margin-bottom: 15px; color: #5a5df0; text-align: center; }
+        .tier-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .tier-table td { padding: 8px 0; border-bottom: 1px solid #333; }
+        .tier-table .t-name { font-weight: 900; }
+        .tier-table .t-score { text-align: right; color: #aaa; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="tier-dashboard" onclick="toggleModal(true)">
+        <span id="display-tier-name" class="tier-name" style="color: var(--tier-iron)">IRON IV</span>
+        <span id="display-tier-score" class="tier-score">0 Pts</span>
+        <div class="top10-info">TOP 10 RECORDS SUM</div>
+    </div>
+
+    <div class="side-panel">
+        <div class="input-group">
+            <label>SONG TITLE</label>
+            <input type="text" id="songTitle" list="songHistory" placeholder="곡 제목 입력">
+            <datalist id="songHistory"></datalist>
+        </div>
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
+            <div class="input-group">
+                <label>DIFFICULTY</label>
+                <select id="difficulty">
+                    <option value="MASTER">MASTER</option>
+                    <option value="EXPERT">EXPERT</option>
+                    <option value="APPEND">APPEND</option>
+                    <option value="HARD">HARD</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>LEVEL</label>
+                <input type="number" id="level" placeholder="Lv">
+            </div>
+        </div>
+        <div class="judgment-grid">
+            <div><label class="lbl-p">PERFECT</label><input type="number" id="p_cnt" placeholder="0"></div>
+            <div><label class="lbl-g" style="color:var(--g-color)">GREAT</label><input type="number" id="g_cnt" placeholder="0"></div>
+            <div><label class="lbl-gd" style="color:var(--gd-color)">GOOD</label><input type="number" id="gd_cnt" placeholder="0"></div>
+            <div><label class="lbl-b" style="color:var(--b-color)">BAD</label><input type="number" id="b_cnt" placeholder="0"></div>
+            <div style="grid-column: span 2;"><label class="lbl-m" style="color:var(--m-color)">MISS</label><input type="number" id="m_cnt" placeholder="0"></div>
+        </div>
+        <button id="save-btn" onclick="addRecord()">SAVE RECORD</button>
+    </div>
+
+    <div class="filter-section">
+        <div class="filter-row" style="margin-bottom: 12px;">
+            <button class="filter-btn active" onclick="setFilter('diff', 'ALL', this)">ALL DIFF</button>
+            <button class="filter-btn" onclick="setFilter('diff', 'MASTER', this)">MASTER</button>
+            <button class="filter-btn" onclick="setFilter('diff', 'EXPERT', this)">EXPERT</button>
+            <button class="filter-btn" onclick="setFilter('diff', 'APPEND', this)">APPEND</button>
+        </div>
+        <div class="filter-row">
+            <button class="filter-btn active" onclick="setFilter('status', 'ALL', this)">ALL CLEAR</button>
+            <button class="filter-btn" onclick="setFilter('status', 'FC', this)">FC/AP</button>
+            <button class="filter-btn" onclick="setFilter('status', 'AP', this)">AP ONLY</button>
+        </div>
+    </div>
+
+    <div id="recordList"></div>
+</div>
+
+<div id="tierModal" class="modal" onclick="toggleModal(false)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-title">TIER THRESHOLDS</div>
+        <table class="tier-table" id="tier-table-body"></table>
+    </div>
+</div>
+
+<script>
+    let records = JSON.parse(localStorage.getItem('proseka_v4.0')) || [];
+    let currentDiff = 'ALL';
+    let currentStatus = 'ALL';
+
+    const TIER_CONFIG = [
+        { name: "GRAND MASTER", min: 2250000, color: "var(--tier-grandmaster)" },
+        { name: "MASTER", min: 1800000, color: "var(--tier-master)" },
+        { name: "DIAMOND I", min: 1700000, color: "var(--tier-diamond)" },
+        { name: "DIAMOND II", min: 1600000, color: "var(--tier-diamond)" },
+        { name: "DIAMOND III", min: 1500000, color: "var(--tier-diamond)" },
+        { name: "DIAMOND IV", min: 1400000, color: "var(--tier-diamond)" },
+        { name: "PLATINUM I", min: 1325000, color: "var(--tier-platinum)" },
+        { name: "PLATINUM II", min: 1250000, color: "var(--tier-platinum)" },
+        { name: "PLATINUM III", min: 1175000, color: "var(--tier-platinum)" },
+        { name: "PLATINUM IV", min: 1100000, color: "var(--tier-platinum)" },
+        { name: "GOLD I", min: 1030000, color: "var(--tier-gold)" },
+        { name: "GOLD II", min: 970000, color: "var(--tier-gold)" },
+        { name: "GOLD III", min: 910000, color: "var(--tier-gold)" },
+        { name: "GOLD IV", min: 850000, color: "var(--tier-gold)" },
+        { name: "SILVER I", min: 800000, color: "var(--tier-silver)" },
+        { name: "SILVER II", min: 750000, color: "var(--tier-silver)" },
+        { name: "SILVER III", min: 700000, color: "var(--tier-silver)" },
+        { name: "SILVER IV", min: 650000, color: "var(--tier-silver)" },
+        { name: "BRONZE I", min: 600000, color: "var(--tier-bronze)" },
+        { name: "BRONZE II", min: 550000, color: "var(--tier-bronze)" },
+        { name: "BRONZE III", min: 500000, color: "var(--tier-bronze)" },
+        { name: "BRONZE IV", min: 450000, color: "var(--tier-bronze)" },
+        { name: "IRON I", min: 350000, color: "var(--tier-iron)" },
+        { name: "IRON II", min: 250000, color: "var(--tier-iron)" },
+        { name: "IRON III", min: 100000, color: "var(--tier-iron)" },
+        { name: "IRON IV", min: 0, color: "var(--tier-iron)" }
+    ];
+
+    function calculatePoints(lv, status, maxMinus) {
+        const base = Math.pow(lv, 4) / 10;
+        let mult = 1.0;
+        // AP 보너스를 1.35배로 수정, FC는 1.2배 유지
+        if (status === "AP") mult = 1.35;
+        else if (status === "FC") mult = 1.2;
+        const deduction = maxMinus * lv * 2.5;
+        return Math.max(0, Math.floor(base * mult - deduction));
+    }
+
+    function updateDatalist() {
+        const list = document.getElementById('songHistory');
+        const titles = [...new Set(records.map(r => r.title))];
+        list.innerHTML = titles.map(t => `<option value="${t}">`).join('');
+    }
+
+    function addRecord() {
+        const title = document.getElementById('songTitle').value.trim() || "Untitled";
+        const diff = document.getElementById('difficulty').value;
+        const lv = parseInt(document.getElementById('level').value) || 0;
+        const p = parseInt(document.getElementById('p_cnt').value) || 0;
+        const g = parseInt(document.getElementById('g_cnt').value) || 0;
+        const gd = parseInt(document.getElementById('gd_cnt').value) || 0;
+        const b = parseInt(document.getElementById('b_cnt').value) || 0;
+        const m = parseInt(document.getElementById('m_cnt').value) || 0;
+        const maxMinus = (g * 1) + (gd * 2) + (b * 3) + (m * 3);
+        let status = "";
+        if (g >= 0 && gd === 0 && b === 0 && m === 0) { status = (g === 0) ? "AP" : "FC"; }
+        const pts = calculatePoints(lv, status, maxMinus);
+        const existingIdx = records.findIndex(r => r.title === title && r.diff === diff);
+        if (existingIdx !== -1) {
+            const old = records[existingIdx];
+            const getRank = (s) => (s === "AP" ? 3 : (s === "FC" ? 2 : 1));
+            if (getRank(status) > getRank(old.status) || (getRank(status) === getRank(old.status) && maxMinus < old.maxMinus)) {
+                records.splice(existingIdx, 1);
+            } else { alert("기존 기록이 더 좋음"); return; }
+        }
+        records.push({ title, diff, lv, p, g, gd, b, m, maxMinus, status, pts });
+        saveAndRender();
+        document.querySelectorAll('.judgment-grid input').forEach(i => i.value = "");
+    }
+
+    function saveAndRender() {
+        records.sort((a, b) => {
+            if (b.lv !== a.lv) return b.lv - a.lv;
+            const getRank = (s) => (s === "AP" ? 3 : (s === "FC" ? 2 : 1));
+            if (getRank(b.status) !== getRank(a.status)) return getRank(b.status) - getRank(a.status);
+            return a.maxMinus - b.maxMinus;
+        });
+        localStorage.setItem('proseka_v4.0', JSON.stringify(records));
+        updateDatalist();
+        updateTier();
+        render();
+    }
+
+    function updateTier() {
+        const sortedByPts = [...records].sort((a, b) => (b.pts || 0) - (a.pts || 0));
+        const top10Sum = sortedByPts.slice(0, 10).reduce((sum, r) => sum + (r.pts || 0), 0);
+        let currentTier = TIER_CONFIG[TIER_CONFIG.length - 1];
+        for (const tier of TIER_CONFIG) { if (top10Sum >= tier.min) { currentTier = tier; break; } }
+        const nameEl = document.getElementById('display-tier-name');
+        nameEl.innerText = currentTier.name;
+        nameEl.style.color = currentTier.color;
+        document.getElementById('display-tier-score').innerText = top10Sum.toLocaleString() + " Pts";
+    }
+
+    function toggleModal(show) {
+        const modal = document.getElementById('tierModal');
+        modal.style.display = show ? 'flex' : 'none';
+        if(show) {
+            const table = document.getElementById('tier-table-body');
+            table.innerHTML = TIER_CONFIG.map(t => `<tr><td class="t-name" style="color:${t.color}">${t.name}</td><td class="t-score">${t.min.toLocaleString()} Pts</td></tr>`).join('');
+        }
+    }
+
+    function setFilter(type, value, btn) {
+        if (type === 'diff') currentDiff = value;
+        if (type === 'status') currentStatus = value;
+        const row = btn.parentElement;
+        row.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        render();
+    }
+
+    function render() {
+        const listEl = document.getElementById('recordList');
+        listEl.innerHTML = "";
+        const filtered = records.filter(r => {
+            const matchDiff = (currentDiff === 'ALL' || r.diff === currentDiff);
+            const matchStatus = (currentStatus === 'ALL') || (currentStatus === 'FC' && (r.status === 'FC' || r.status === 'AP')) || (currentStatus === 'AP' && r.status === 'AP');
+            return matchDiff && matchStatus;
+        });
+        filtered.forEach((r) => {
+            const isAP = r.status === "AP";
+            const isFC = r.status === "FC";
+            const item = document.createElement('div');
+            item.className = 'record-item';
+            item.innerHTML = `
+                <span class="record-points">${(r.pts || 0).toLocaleString()} pt</span>
+                <div class="item-header">
+                    <div class="song-info">
+                        <span class="lv-tag" style="background: var(--${r.diff.toLowerCase()})">${r.diff} ${r.lv}</span>
+                        <span class="song-title">${r.title}</span>
+                    </div>
+                    <button class="del-btn" onclick="deleteRecord('${r.title}', '${r.diff}')">✕</button>
+                </div>
+                <div class="item-status-row">
+                    <div class="judgments">
+                        <div><span class="p">${r.p}</span></div>
+                        <div><span class="g">${r.g}</span></div>
+                        <div><span class="gd">${r.gd}</span></div>
+                        <div><span class="b">${r.b}</span></div>
+                        <div><span class="m">${r.m}</span></div>
+                    </div>
+                    <div class="status-display">
+                        ${isAP ? '<span class="status-ap">ALL PERFECT</span>' : `<span class="minus-val">MAX-${r.maxMinus}</span>${isFC ? '<span class="fc-text">FULL COMBO</span>' : ''}`}
+                    </div>
+                </div>
+            `;
+            listEl.appendChild(item);
+        });
+    }
+
+    function deleteRecord(title, diff) {
+        if(confirm("기록을 삭제하시겠습니까?")) {
+            records = records.filter(r => !(r.title === title && r.diff === diff));
+            saveAndRender();
+        }
+    }
+    
+    // 점수 재계산 (배율 변경 적용을 위함)
+    records.forEach(r => { r.pts = calculatePoints(r.lv, r.status, r.maxMinus); });
+    updateDatalist();
+    updateTier();
+    render();
+</script>
+</body>
+</html>
